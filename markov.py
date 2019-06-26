@@ -7,20 +7,21 @@ import hashlib
 
 #TODO fix this shitty code
 def buildDataSet(file, persist=False):
-	dataSet = node("")
-
+	dataSet = node()
 	f = open(file, 'r')
-	line = fp.readline()
-	spline = line.strip().split(" ")
-	for i in range(0,len(spline)):
-		if node(i) in dataSet:
-			for j in range (i+1, len(spline)):
-				tempNode = node(i).addChainedWord(spline[j]) 
-				if tempNode is not None:
-					j += 1
-					tempNode.addChainedWord(spline[j])
-				else:
-					pass
+	for line in f:
+		spline = line.strip().split(" ")
+		iterNode = dataSet
+
+		for i in spline:
+			iterNode = iterNode.addChainedWord(i)
+			print(iterNode.getVal())
+
+	f.close()
+	return dataSet
+		
+
+
 
 class node:
 
@@ -37,6 +38,9 @@ class node:
 		for i in self.pairWords:
 			probs.append(self.getProb(i))
 			vals.append(i)
+
+		if vals == [] or probs == []:
+			return None, None
 
 		selectedString = None
 		selectedNode = None
@@ -61,44 +65,29 @@ class node:
 	def getVal(self):
 		return self.value
 
-	def __eq__(self, other):
-		if self.getVal() == other.getVal():
-			return True
-		else:
-			return False
-
-	def __hash__(self):
-		#returns the sum of all ascii characters in the string... could possibly be an issue later on with words that
-		#are anagrams of eachother (such as listen and silent) but this appears to be an easy fix for now
-		x = [ord(i) for i in self.getVal()]
-		total = 0
-		for i in x:
-			total += i
-
-		return(total)
-
 	def generateChain(self):
 		generatedStringChain = ""
 		generatedString, generatedNode = self.selectRandomNext()
-		while(generatedString is not None):
+		while True:
 			generatedStringChain += generatedString + " "
 			generatedString, generatedNode = generatedNode.selectRandomNext()
+			if generatedString is None or generatedNode is None:
+				break
+			print(generatedString)
 
 		return generatedStringChain
 
+	#Pretty sure this is the issue here, keep fixing this
 	def addChainedWord(self, word):
-		tempNode = node(word)
-		if tempNode in self.pairWords:
-			self.pairWords[tempNode] += 1
-			return tempNode
-		else:
-			self.pairWords.update({tempNode : 1})
-			return None
+		for n in self.pairWords:
+			if n.getVal() == word:	
+				self.pairWords[n] += 1
+				else:
+					self.pairWords.update({tempNode : 1})
+				
+				for n in self.pairWords:
+					if n == tempNode:
+						return n
+		return None
 
-x = node(pairWords={
-		node(value="Node", pairWords={node("Bodes"):3,node("Coeds"):6,node("Boats"):7}):32,
-		node(value="Code"): 18,
-		node(value="Chode"):5
-	})
-
-print(x.generateChain())
+print(buildDataSet("training.txt").generateChain())
